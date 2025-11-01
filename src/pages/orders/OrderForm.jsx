@@ -1,0 +1,489 @@
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
+
+// Dummy data for customers and productions
+const CUSTOMERS = [
+  { id: 1, name: "Sunrise Bakery" },
+  { id: 2, name: "City Snacks" },
+  { id: 3, name: "Green Valley Cafe" },
+];
+
+const PRODUCTIONS_CATALOG = [
+  { id: 1, name: "Chocolate Cake", unit: "piece", price: 1200, cost: 650 },
+  { id: 2, name: "Shawarma", unit: "piece", price: 250, cost: 140 },
+  { id: 3, name: "Biryani", unit: "kg", price: 450, cost: 280 },
+  { id: 4, name: "Spring Roll", unit: "piece", price: 80, cost: 45 },
+];
+
+const STATUS_OPTIONS = [
+  { value: "request-material", label: "Request Material" },
+  { value: "material-sent", label: "Material Sent" },
+  { value: "material-received", label: "Material Received" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+// Materials Data and Recipes
+const MATERIALS_CATALOG = [
+  { id: 1, name: "Flour (All-purpose)", unit: "kg", unitPrice: 35 },
+  { id: 2, name: "Sugar (Granulated)", unit: "kg", unitPrice: 40 },
+  { id: 3, name: "Yeast (Dry)", unit: "pack", unitPrice: 150 },
+  { id: 4, name: "Chicken (Breast)", unit: "kg", unitPrice: 700 },
+];
+
+const PRODUCTION_RECIPES = {
+  1: [
+    { materialId: 1, quantity: 0.5 },
+    { materialId: 2, quantity: 0.3 },
+  ],
+  2: [
+    { materialId: 1, quantity: 0.1 },
+    { materialId: 4, quantity: 0.15 },
+    { materialId: 3, quantity: 0.01 },
+  ],
+  3: [{ materialId: 4, quantity: 0.5 }],
+  4: [
+    { materialId: 1, quantity: 0.05 },
+    { materialId: 4, quantity: 0.03 },
+  ],
+};
+
+function OrderForm({ order, onCancel, onSave }) {
+  const isEdit = !!order;
+
+  // Direct initialization from props - component remounts each time due to key prop
+  const [customerId, setCustomerId] = useState(
+    String(order?.customer?.id || "")
+  );
+  const [deliveryDate, setDeliveryDate] = useState(order?.deliveryDate || "");
+  const [productions, setproductions] = useState(
+    (order?.productions || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      unit: p.unit || "piece",
+      quantity: String(p.quantity || 1),
+      price: p.price || 0,
+      cost: p.cost || 0,
+    }))
+  );
+  const [totalPrice, setTotalPrice] = useState(String(order?.totalPrice || ""));
+  const [totalCost, setTotalCost] = useState(Number(order?.totalCost || 0));
+  const [status, setStatus] = useState(order?.status || "request-material");
+  const [touchedTotalPrice, setTouchedTotalPrice] = useState(false);
+  const [selectedproductionIndex, setSelectedproductionIndex] = useState(null);
+
+  const computedTotalPrice = useMemo(() => {
+    return productions.reduce(
+      (sum, p) => sum + Number(p.price || 0) * (parseFloat(p.quantity) || 0),
+      0
+    );
+  }, [productions]);
+
+  const computedTotalCost = useMemo(() => {
+    return productions.reduce(
+      (sum, p) => sum + Number(p.cost || 0) * (parseFloat(p.quantity) || 0),
+      0
+    );
+  }, [productions]);
+
+  // --- MODIFIED: This now calculates materials for the *selected* production ---
+  const displayedMaterials = useMemo(() => {
+    if (selectedproductionIndex === null) {
+      return [];
+    }
+
+    const selectedproduction = productions[selectedproductionIndex];
+    if (!selectedproduction) {
+      return [];
+    }
+
+    const orderQuantity = parseFloat(selectedproduction.quantity) || 0;
+    if (orderQuantity === 0) {
+      return [];
+    }
+
+    const recipe = PRODUCTION_RECIPES[selectedproduction.id];
+    if (!recipe) {
+      return []; // No recipe for this production
+    }
+
+    // Map recipe to full material info
+    return recipe
+      .map((recipeMaterial) => {
+        const materialInfo = MATERIALS_CATALOG.find(
+          (m) => m.id === recipeMaterial.materialId
+        );
+        if (!materialInfo) return null; // Material not in catalog
+
+        const totalMaterialNeeded = recipeMaterial.quantity * orderQuantity;
+
+        return {
+          ...materialInfo,
+          totalQuantity: totalMaterialNeeded,
+        };
+      })
+      .filter(Boolean); // Filter out any nulls
+  }, [productions, selectedproductionIndex]);
+
+  const totalMaterialCost = useMemo(() => {
+    return displayedMaterials.reduce((sum, material) => {
+      const cost = (material.unitPrice || 0) * (material.totalQuantity || 0);
+      return sum + cost;
+    }, 0);
+  }, [displayedMaterials]);
+
+  useEffect(() => {
+    if (!touchedTotalPrice) {
+      setTotalPrice(String(computedTotalPrice));
+    }
+  }, [computedTotalPrice, touchedTotalPrice]);
+
+  useEffect(() => {
+    setTotalCost(Number(computedTotalCost.toFixed(2)));
+  }, [computedTotalCost]);
+
+  const addproductionRow = (productionId) => {
+    const found = PRODUCTIONS_CATALOG.find((p) => p.id === productionId);
+    if (!found) return;
+    setproductions((prev) => [
+      ...prev,
+      {
+        id: found.id,
+        name: found.name,
+        unit: found.unit,
+        quantity: "1",
+        price: found.price,
+        cost: found.cost,
+      },
+    ]);
+  };
+
+  const updateproductionAt = (idx, updater) => {
+    setproductions((prev) => prev.map((p, i) => (i === idx ? updater(p) : p)));
+  };
+
+  const removeproductionAt = (idx) => {
+    setproductions((prev) => prev.filter((_, i) => i !== idx));
+
+    // --- ADDED: Adjust selection if the removed item affects it ---
+    setSelectedproductionIndex((prev) => {
+      if (prev === null) return null; // No selection, do nothing
+      if (prev === idx) return null; // Removed item was selected, so deselect
+      if (prev > idx) return prev - 1; // Removed item was before selected, shift index
+      return prev; // Removed item was after selected, no change
+    });
+  };
+
+  const handleQuantityChange = (idx, value) => {
+    updateproductionAt(idx, (p) => ({ ...p, quantity: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const selectedCustomer = CUSTOMERS.find((c) => c.id === Number(customerId));
+    const payload = {
+      customer: selectedCustomer || { id: Number(customerId), name: "Unknown" },
+      deliveryDate,
+      productions: productions.map((p) => ({
+        id: p.id,
+        name: p.name,
+        unit: p.unit,
+        quantity: Number(p.quantity) || 0,
+        price: Number(p.price) || 0,
+        cost: Number(p.cost) || 0,
+      })),
+      totalPrice: Number(totalPrice) || 0,
+      totalCost: Number(totalCost) || 0,
+      status,
+    };
+    onSave?.(payload);
+  };
+
+  // --- ADDED: Helper to get the selected production's name ---
+  const selectedproductionName =
+    selectedproductionIndex !== null
+      ? productions[selectedproductionIndex]?.name
+      : null;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FieldGroup>
+        <Field>
+          <FieldLabel>Customer</FieldLabel>
+          <Select value={customerId} onValueChange={setCustomerId} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select customer" />
+            </SelectTrigger>
+            <SelectContent>
+              {CUSTOMERS.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="deliveryDate">Delivery Date</FieldLabel>
+          <Input
+            id="deliveryDate"
+            type="date"
+            value={deliveryDate}
+            onChange={(e) => setDeliveryDate(e.target.value)}
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel>Status</FieldLabel>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <div className="pt-2">
+          <div className="flex items-center justify-between mb-2 gap-3">
+            <h3 className="text-base font-semibold min-w-fit">productions</h3>
+            <div className="w-full">
+              <Select
+                onValueChange={(v) => {
+                  const id = parseInt(v);
+                  if (!Number.isNaN(id)) addproductionRow(id);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Add production..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRODUCTIONS_CATALOG.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>
+                      {p.name} - ₹{p.price}/{p.unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader className="bg-muted">
+                <TableRow>
+                  <TableHead className="w-[35%]">production</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Subtotal</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {productions.map((p, idx) => {
+                  const subtotal =
+                    Number(p.price || 0) * (parseFloat(p.quantity) || 0);
+                  return (
+                    <TableRow key={idx}>
+                      <TableCell>{p.name}</TableCell>
+                      <TableCell>₹ {p.price}</TableCell>
+                      <TableCell>
+                        <InputGroup>
+                          <InputGroupInput
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            step="0.01"
+                            value={p.quantity}
+                            onChange={(e) =>
+                              handleQuantityChange(idx, e.target.value)
+                            }
+                            onFocus={() => setSelectedproductionIndex(idx)}
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupText>{p.unit}</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </TableCell>
+                      <TableCell>₹ {subtotal.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          // --- MODIFIED: Stop propagation ---
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevents row click
+                            removeproductionAt(idx);
+                          }}
+                          aria-label="Remove production"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {productions.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-sm text-muted-foreground"
+                    >
+                      {selectedproductionName
+                        ? "No materials listed for this production."
+                        : "Focus on a production's quantity box to see its materials."}
+                      .
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* --- MODIFIED: Materials Table --- */}
+          <div className="pt-4">
+            <h3 className="text-base font-semibold mb-2">
+              {/* --- MODIFIED: Dynamic heading --- */}
+              Required Materials{" "}
+              {selectedproductionName ? `for ${selectedproductionName}` : ""}
+            </h3>
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Required Quantity</TableHead>
+                    <TableHead>Estimated Cost</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* --- MODIFIED: Check displayedMaterials length --- */}
+                  {displayedMaterials.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className="text-center text-sm text-muted-foreground"
+                      >
+                        {/* --- MODIFIED: Dynamic empty message --- */}
+                        {selectedproductionName
+                          ? "No materials listed for this production."
+                          : "Click a production in the table above to see its materials."}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    // --- MODIFIED: Map over displayedMaterials ---
+                    displayedMaterials.map((material) => {
+                      const materialCost =
+                        (material.unitPrice || 0) * material.totalQuantity;
+                      return (
+                        <TableRow key={material.id}>
+                          <TableCell>{material.name}</TableCell>
+                          <TableCell>
+                            {material.totalQuantity.toFixed(2)} {material.unit}
+                          </TableCell>
+                          <TableCell>₹ {materialCost.toFixed(2)}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+                {/* --- MODIFIED: Check displayedMaterials length --- */}
+                {displayedMaterials.length > 0 && (
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        className="text-right font-semibold"
+                      >
+                        Total Material Cost
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {/* --- MODIFIED: Use totalMaterialCost --- */}₹{" "}
+                        {totalMaterialCost.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  </TableFooter>
+                )}
+              </Table>
+            </div>
+          </div>
+          {/* --- END: Materials Table --- */}
+        </div>
+
+        <Field>
+          <FieldLabel htmlFor="computedTotalPrice">
+            Computed Total Price
+          </FieldLabel>
+          <Input
+            id="computedTotalPrice"
+            value={`₹ ${computedTotalPrice.toFixed(2)}`}
+            readOnly
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="totalPrice">Total Price (editable)</FieldLabel>
+          <Input
+            id="totalPrice"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={totalPrice}
+            onChange={(e) => {
+              setTouchedTotalPrice(true);
+              setTotalPrice(e.target.value);
+            }}
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="totalCost">Total Cost (COGS)</FieldLabel>
+          <Input id="totalCost" value={`₹ ${totalCost.toFixed(2)}`} readOnly />
+        </Field>
+        <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">{isEdit ? "Save Changes" : "Add Order"}</Button>
+        </div>
+      </FieldGroup>
+    </form>
+  );
+}
+
+export default OrderForm;
