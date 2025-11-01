@@ -15,6 +15,13 @@ import {
   List,
   Currency,
   UsersIcon,
+  LineChart,
+  Package,
+  CreditCard,
+  Truck,
+  Factory,
+  ClipboardList,
+  Warehouse,
 } from "lucide-react";
 
 import {
@@ -41,10 +48,11 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Orders", url: "/orders", icon: ShoppingCart },
-  { title: "Customers", url: "/customers", icon: UsersIcon },
-  { title: "Sales", url: "/sales", icon: Currency },
-  { title: "Purchase", url: "/purchase", icon: Store },
-  { title: "Payments", url: "/payments", icon: Banknote },
+  { title: "Customers", url: "/customers", icon: Users },
+  { title: "Sales", url: "/sales", icon: LineChart },
+  { title: "Purchase", url: "/purchase", icon: Package },
+  { title: "Payments", url: "/payments", icon: CreditCard },
+  { title: "Suppliers", url: "/suppliers", icon: Truck },
   // { title: "Finance", url: "/staff/finance", icon: Banknote },
   // { title: "Reports", url: "/staff/reports", icon: FileText },
   // { title: "Administration", url: "/staff/admin", icon: Shield },
@@ -54,23 +62,23 @@ const navItems = [
 const navItemsWithSubItems = [
   {
     title: "Production",
-    icon: Store,
+    icon: Factory,
     items: [
       {
         title: "Production List",
         url: "/productions",
-        icon: List,
+        icon: ClipboardList,
       },
     ],
   },
   {
     title: "Store",
-    icon: Store,
+    icon: Warehouse,
     items: [
       {
-        title: "Meterial List",
-        url: "/meterails",
-        icon: List,
+        title: "Material List",
+        url: "/materials",
+        icon: ClipboardList,
       },
     ],
   },

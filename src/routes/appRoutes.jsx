@@ -5,10 +5,11 @@ import Orders from "@/pages/orders/Orders";
 import Sales from "@/pages/sales/Sales";
 import Purchase from "@/pages/purchase/Purchase";
 import Productions from "@/pages/productions/Productions";
-import Meterails from "@/pages/meterails/Meterails";
+import Materials from "@/pages/materials/Materials";
 import { Routes, Route } from "react-router-dom";
 import Customers from "@/pages/customers/Customer";
 import Payments from "@/pages/payments/Payments";
+import Suppliers from "@/pages/suppliers/Suppliers";
 
 export default function AppRoutes() {
   return (
@@ -23,7 +24,8 @@ export default function AppRoutes() {
         <Route path="purchase" element={<Purchase />} />
         <Route path="payments" element={<Payments />} />
         <Route path="productions" element={<Productions />} />
-        <Route path="meterails" element={<Meterails />} />
+        <Route path="materials" element={<Materials />} />
+        <Route path="suppliers" element={<Suppliers />} />
       </Route>
 
       {/* Fallback */}

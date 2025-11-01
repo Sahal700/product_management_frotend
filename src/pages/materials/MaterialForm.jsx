@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-function MeterialForm({ material, onCancel, onSave }) {
+function MaterialForm({ material, onCancel, onSave }) {
   const isEdit = !!material;
   const [name, setName] = useState(material?.name || "");
   const [unitPrice, setunitPrice] = useState(String(material?.unitPrice ?? ""));
@@ -84,4 +84,4 @@ function MeterialForm({ material, onCancel, onSave }) {
   );
 }
 
-export default MeterialForm;
+export default MaterialForm;

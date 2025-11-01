@@ -29,10 +29,10 @@ import {
   Ellipsis,
   SearchIcon,
 } from "lucide-react";
-import MeterialForm from "./MeterialForm";
+import MaterialForm from "./MaterialForm";
 import { MATERIALS_CATALOG } from "@/lib/data";
 
-function Meterails() {
+function Materials() {
   const { isMobile, open } = useSidebar();
 
   const [materials, setMaterials] = useState(MATERIALS_CATALOG);
@@ -223,7 +223,7 @@ function Meterails() {
         }
         size="lg"
       >
-        <MeterialForm
+        <MaterialForm
           material={selected}
           onCancel={() => setDialogOpen(false)}
           onSave={handleSave}
@@ -233,4 +233,4 @@ function Meterails() {
   );
 }
 
-export default Meterails;
+export default Materials;
