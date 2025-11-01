@@ -21,25 +21,36 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { ResponsiveDrawerDialog } from "@/components/custom/responsiveDrawerDialog";
-import { Ellipsis, SearchIcon } from "lucide-react";
+import { Ellipsis, Search } from "lucide-react";
 import {
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import PurchaseForm from "./PurchaseForm";
+
+const PURCHASE_STATUS_CONFIG = {
+  pending: { label: "Pending", color: "bg-yellow-500" },
+  "partially-paid": { label: "Partially Paid", color: "bg-blue-500" },
+  paid: { label: "Paid", color: "bg-green-500" },
+  cancelled: { label: "Cancelled", color: "bg-red-500" },
+};
+
 function Purchase() {
   const { isMobile, open } = useSidebar();
 
-  // Dummy productions
   const [purchases, setPurchases] = useState([
     {
       id: 1,
       supplier: { id: 1, name: "KK Supermart" },
       purchaseDate: "2025-01-01",
-      totalPrice: 1200,
+      totalAmount: 1200,
+      paidAmount: 1200,
+      dueAmount: 0,
       invoiceNumber: "INV-001",
+      status: "paid",
       materials: [
         {
           id: 2,
@@ -51,7 +62,7 @@ function Purchase() {
         {
           id: 3,
           name: "Sugar (Granulated)",
-          quantity: 100,
+          quantity: 20,
           unit: "pack",
           unitPrice: 10,
         },
@@ -61,8 +72,11 @@ function Purchase() {
       id: 2,
       supplier: { id: 2, name: "ABC Supermart" },
       purchaseDate: "2025-01-02",
-      totalPrice: 1200,
+      totalAmount: 1200,
+      paidAmount: 500,
+      dueAmount: 700,
       invoiceNumber: "INV-002",
+      status: "partially-paid",
       materials: [
         {
           id: 2,
@@ -74,9 +88,28 @@ function Purchase() {
         {
           id: 3,
           name: "Sugar (Granulated)",
-          quantity: 100,
+          quantity: 20,
           unit: "pack",
           unitPrice: 10,
+        },
+      ],
+    },
+    {
+      id: 3,
+      supplier: { id: 1, name: "KK Supermart" },
+      purchaseDate: "2025-01-03",
+      totalAmount: 2500,
+      paidAmount: 0,
+      dueAmount: 2500,
+      invoiceNumber: "INV-003",
+      status: "pending",
+      materials: [
+        {
+          id: 4,
+          name: "Chicken (Breast)",
+          quantity: 50,
+          unit: "kg",
+          unitPrice: 50,
         },
       ],
     },
@@ -93,9 +126,13 @@ function Purchase() {
     const term = search.trim().toLowerCase();
     if (!term) return purchases;
     return purchases.filter((p) =>
-      [p.supplier?.name, p.purchaseDate, String(p.totalPrice)].some((v) =>
-        String(v).toLowerCase().includes(term)
-      )
+      [
+        p.supplier?.name,
+        p.purchaseDate,
+        p.invoiceNumber,
+        String(p.totalAmount),
+        PURCHASE_STATUS_CONFIG[p.status]?.label,
+      ].some((v) => String(v).toLowerCase().includes(term))
     );
   }, [purchases, search]);
 
@@ -142,6 +179,8 @@ function Purchase() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Purchase</h1>
+      <p>Record material purchases from suppliers and track payments.</p>
+
       <div className="mt-4 flex items-center space-x-2">
         <InputGroup className="md:w-1/2">
           <InputGroupInput
@@ -150,13 +189,14 @@ function Purchase() {
             onChange={(e) => setSearch(e.target.value)}
           />
           <InputGroupAddon>
-            <SearchIcon />
+            <Search />
           </InputGroupAddon>
         </InputGroup>
         <Button className="ms-auto" size="sm" onClick={handleAdd}>
           Add purchase
         </Button>
       </div>
+
       <div
         className={`overflow-hidden mt-4 mb-4 rounded-lg border custom-scrollbar transition-all duration-300 ${
           isMobile
@@ -169,23 +209,51 @@ function Purchase() {
         <Table className="custom-scrollbar">
           <TableHeader className="bg-muted">
             <TableRow>
+              <TableHead>Invoice NO</TableHead>
               <TableHead>Supplier</TableHead>
-              <TableHead>Purchase date</TableHead>
-              <TableHead>Total price</TableHead>
-              <TableHead>Invoice number</TableHead>
+              <TableHead>Purchase Date</TableHead>
+              <TableHead>Total Amount</TableHead>
+              <TableHead>Paid Amount</TableHead>
+              <TableHead>Due Amount</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Materials</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {paged.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={9}
+                  className="text-center text-muted-foreground"
+                >
+                  No purchases found.
+                </TableCell>
+              </TableRow>
+            )}
             {paged.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="font-medium">
-                  {p.supplier?.name || "N/A"}
-                </TableCell>
+                <TableCell className="font-medium">{p.invoiceNumber}</TableCell>
+                <TableCell>{p.supplier?.name || "N/A"}</TableCell>
                 <TableCell>{p.purchaseDate}</TableCell>
-                <TableCell>₹ {p.totalPrice}</TableCell>
-                <TableCell>{p.invoiceNumber}</TableCell>
+                <TableCell>₹ {p.totalAmount.toFixed(2)}</TableCell>
+                <TableCell>₹ {p.paidAmount.toFixed(2)}</TableCell>
+                <TableCell
+                  className={`font-semibold ${
+                    p.dueAmount > 0 ? "text-red-600" : "text-green-600"
+                  }`}
+                >
+                  ₹ {p.dueAmount.toFixed(2)}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    className={`${
+                      PURCHASE_STATUS_CONFIG[p.status]?.color || "bg-gray-500"
+                    } text-white`}
+                  >
+                    {PURCHASE_STATUS_CONFIG[p.status]?.label || p.status}
+                  </Badge>
+                </TableCell>
                 <TableCell>{p.materials?.length || 0} items</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -212,6 +280,7 @@ function Purchase() {
           </TableBody>
         </Table>
       </div>
+
       <div className="flex">
         <div className="ms-auto flex space-x-2 items-center">
           <p className="me-8 text-sm font-semibold">
@@ -255,12 +324,15 @@ function Purchase() {
           </Button>
         </div>
       </div>
+
       <ResponsiveDrawerDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={selected ? "Edit Purchase" : "Add Purchase"}
         description={
-          selected ? "Update purchase details" : "Add a new purchase"
+          selected
+            ? "Update purchase and payment details."
+            : "Add a new purchase from supplier."
         }
         size="xl"
       >

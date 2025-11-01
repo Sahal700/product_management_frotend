@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -27,6 +27,13 @@ import {
 
 import { MATERIALS_CATALOG, SUPPLIERS } from "@/lib/data";
 
+const PURCHASE_STATUS_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "partially-paid", label: "Partially Paid" },
+  { value: "paid", label: "Paid" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 function PurchaseForm({ purchase, onCancel, onSave }) {
   const isEdit = !!purchase;
 
@@ -39,8 +46,8 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
   const [invoiceNumber, setInvoiceNumber] = useState(
     purchase?.invoiceNumber || ""
   );
-  const [totalPrice, setTotalPrice] = useState(
-    String(purchase?.totalPrice ?? "")
+  const [totalAmount, setTotalAmount] = useState(
+    String(purchase?.totalAmount ?? "")
   );
   const [materials, setMaterials] = useState(
     (purchase?.materials || []).map((m) => ({
@@ -51,6 +58,10 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
       unitPrice: m.unitPrice,
     }))
   );
+  const [paidAmount, setPaidAmount] = useState(
+    String(purchase?.paidAmount || "")
+  );
+  const [status, setStatus] = useState(purchase?.status || "pending");
 
   const [addMaterialSelect, setAddMaterialSelect] = useState();
 
@@ -60,8 +71,15 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
         sum + Number(m.unitPrice || 0) * (parseFloat(m.quantity) || 0),
       0
     );
-    setTotalPrice(subtotal.toFixed(2));
+    setTotalAmount(subtotal.toFixed(2));
   }, [materials]);
+
+  // Calculate Due Amount
+  const dueAmount = useMemo(() => {
+    const total = parseFloat(totalAmount) || 0;
+    const paid = parseFloat(paidAmount) || 0;
+    return total - paid;
+  }, [totalAmount, paidAmount]);
 
   const addMaterialById = (materialId) => {
     const found = MATERIALS_CATALOG.find((m) => m.id === materialId);
@@ -105,7 +123,10 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
       supplier: selectedSupplier || { id: Number(supplierId), name: "Unknown" },
       purchaseDate: purchaseDate,
       invoiceNumber: invoiceNumber.trim(),
-      totalPrice: Number(totalPrice) || 0,
+      totalAmount: Number(totalAmount) || 0,
+      paidAmount: Number(paidAmount) || 0,
+      dueAmount: dueAmount,
+      status,
       materials: materials.map((m) => ({
         id: m.id,
         name: m.name,
@@ -270,23 +291,77 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
           </div>
         </div>
 
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="totalAmount">Total Amount</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon align="inline-start">
+                <InputGroupText>₹</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
+                id="totalAmount"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={totalAmount}
+                onChange={(e) => setTotalAmount(e.target.value)}
+                required
+              />
+            </InputGroup>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="paidAmount">Paid Amount</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon align="inline-start">
+                <InputGroupText>₹</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
+                id="paidAmount"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={paidAmount}
+                onChange={(e) => setPaidAmount(e.target.value)}
+              />
+            </InputGroup>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="dueAmount">Due Amount</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon align="inline-start">
+                <InputGroupText>₹</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
+                id="dueAmount"
+                type="number"
+                value={dueAmount.toFixed(2)}
+                readOnly
+                className={`font-semibold ${
+                  dueAmount > 0 ? "text-red-600" : "text-green-600"
+                }`}
+              />
+            </InputGroup>
+          </Field>
+        </FieldGroup>
+
         <Field>
-          <FieldLabel htmlFor="totalPrice">Total Price</FieldLabel>
-          <InputGroup>
-            <InputGroupAddon align="inline-start">
-              <InputGroupText>₹</InputGroupText>
-            </InputGroupAddon>
-            <InputGroupInput
-              id="totalPrice"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              value={totalPrice}
-              onChange={(e) => setTotalPrice(e.target.value)}
-              required
-            />
-          </InputGroup>
+          <FieldLabel>Purchase Status</FieldLabel>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {PURCHASE_STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </Field>
 
         <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4">

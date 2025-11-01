@@ -10,6 +10,7 @@ import { Routes, Route } from "react-router-dom";
 import Customers from "@/pages/customers/Customer";
 import Payments from "@/pages/payments/Payments";
 import Suppliers from "@/pages/suppliers/Suppliers";
+import SupplierPayments from "@/pages/supplier_payments/SupplierPayments";
 
 export default function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ export default function AppRoutes() {
         <Route path="productions" element={<Productions />} />
         <Route path="materials" element={<Materials />} />
         <Route path="suppliers" element={<Suppliers />} />
+        <Route path="supplier_payments" element={<SupplierPayments />} />
       </Route>
 
       {/* Fallback */}

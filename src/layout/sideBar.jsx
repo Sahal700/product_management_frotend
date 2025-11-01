@@ -22,6 +22,7 @@ import {
   Factory,
   ClipboardList,
   Warehouse,
+  Wallet,
 } from "lucide-react";
 
 import {
@@ -51,7 +52,6 @@ const navItems = [
   { title: "Customers", url: "/customers", icon: Users },
   { title: "Sales", url: "/sales", icon: LineChart },
   { title: "Purchase", url: "/purchase", icon: Package },
-  { title: "Payments", url: "/payments", icon: CreditCard },
   { title: "Suppliers", url: "/suppliers", icon: Truck },
   // { title: "Finance", url: "/staff/finance", icon: Banknote },
   // { title: "Reports", url: "/staff/reports", icon: FileText },
@@ -60,6 +60,22 @@ const navItems = [
 ];
 
 const navItemsWithSubItems = [
+  {
+    title: "Payments",
+    icon: CreditCard,
+    items: [
+      {
+        title: "Customer Payments",
+        url: "/payments",
+        icon: Wallet,
+      },
+      {
+        title: "Supplier Payments",
+        url: "/supplier_payments",
+        icon: Banknote,
+      },
+    ],
+  },
   {
     title: "Production",
     icon: Factory,
