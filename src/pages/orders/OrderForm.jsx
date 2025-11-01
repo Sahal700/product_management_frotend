@@ -77,11 +77,11 @@ const PRODUCTION_RECIPES = {
 function OrderForm({ order, onCancel, onSave }) {
   const isEdit = !!order;
 
-  // Direct initialization from props - component remounts each time due to key prop
   const [customerId, setCustomerId] = useState(
     String(order?.customer?.id || "")
   );
   const [deliveryDate, setDeliveryDate] = useState(order?.deliveryDate || "");
+  const [orderNumber, setOrderNumber] = useState(order?.orderNumber || "");
   const [productions, setproductions] = useState(
     (order?.productions || []).map((p) => ({
       id: p.id,
@@ -93,26 +93,9 @@ function OrderForm({ order, onCancel, onSave }) {
     }))
   );
   const [totalPrice, setTotalPrice] = useState(String(order?.totalPrice || ""));
-  const [totalCost, setTotalCost] = useState(Number(order?.totalCost || 0));
   const [status, setStatus] = useState(order?.status || "request-material");
-  const [touchedTotalPrice, setTouchedTotalPrice] = useState(false);
   const [selectedproductionIndex, setSelectedproductionIndex] = useState(null);
 
-  const computedTotalPrice = useMemo(() => {
-    return productions.reduce(
-      (sum, p) => sum + Number(p.price || 0) * (parseFloat(p.quantity) || 0),
-      0
-    );
-  }, [productions]);
-
-  const computedTotalCost = useMemo(() => {
-    return productions.reduce(
-      (sum, p) => sum + Number(p.cost || 0) * (parseFloat(p.quantity) || 0),
-      0
-    );
-  }, [productions]);
-
-  // --- MODIFIED: This now calculates materials for the *selected* production ---
   const displayedMaterials = useMemo(() => {
     if (selectedproductionIndex === null) {
       return [];
@@ -130,16 +113,15 @@ function OrderForm({ order, onCancel, onSave }) {
 
     const recipe = PRODUCTION_RECIPES[selectedproduction.id];
     if (!recipe) {
-      return []; // No recipe for this production
+      return [];
     }
 
-    // Map recipe to full material info
     return recipe
       .map((recipeMaterial) => {
         const materialInfo = MATERIALS_CATALOG.find(
           (m) => m.id === recipeMaterial.materialId
         );
-        if (!materialInfo) return null; // Material not in catalog
+        if (!materialInfo) return null;
 
         const totalMaterialNeeded = recipeMaterial.quantity * orderQuantity;
 
@@ -148,7 +130,7 @@ function OrderForm({ order, onCancel, onSave }) {
           totalQuantity: totalMaterialNeeded,
         };
       })
-      .filter(Boolean); // Filter out any nulls
+      .filter(Boolean);
   }, [productions, selectedproductionIndex]);
 
   const totalMaterialCost = useMemo(() => {
@@ -159,14 +141,12 @@ function OrderForm({ order, onCancel, onSave }) {
   }, [displayedMaterials]);
 
   useEffect(() => {
-    if (!touchedTotalPrice) {
-      setTotalPrice(String(computedTotalPrice));
-    }
-  }, [computedTotalPrice, touchedTotalPrice]);
-
-  useEffect(() => {
-    setTotalCost(Number(computedTotalCost.toFixed(2)));
-  }, [computedTotalCost]);
+    const subtotal = productions.reduce(
+      (sum, p) => sum + Number(p.price || 0) * (parseFloat(p.quantity) || 0),
+      0
+    );
+    setTotalPrice(subtotal.toFixed(2));
+  }, [productions]);
 
   const addproductionRow = (productionId) => {
     const found = PRODUCTIONS_CATALOG.find((p) => p.id === productionId);
@@ -191,12 +171,11 @@ function OrderForm({ order, onCancel, onSave }) {
   const removeproductionAt = (idx) => {
     setproductions((prev) => prev.filter((_, i) => i !== idx));
 
-    // --- ADDED: Adjust selection if the removed item affects it ---
     setSelectedproductionIndex((prev) => {
-      if (prev === null) return null; // No selection, do nothing
-      if (prev === idx) return null; // Removed item was selected, so deselect
-      if (prev > idx) return prev - 1; // Removed item was before selected, shift index
-      return prev; // Removed item was after selected, no change
+      if (prev === null) return null;
+      if (prev === idx) return null;
+      if (prev > idx) return prev - 1;
+      return prev;
     });
   };
 
@@ -210,6 +189,7 @@ function OrderForm({ order, onCancel, onSave }) {
     const payload = {
       customer: selectedCustomer || { id: Number(customerId), name: "Unknown" },
       deliveryDate,
+      orderNumber,
       productions: productions.map((p) => ({
         id: p.id,
         name: p.name,
@@ -219,13 +199,11 @@ function OrderForm({ order, onCancel, onSave }) {
         cost: Number(p.cost) || 0,
       })),
       totalPrice: Number(totalPrice) || 0,
-      totalCost: Number(totalCost) || 0,
       status,
     };
     onSave?.(payload);
   };
 
-  // --- ADDED: Helper to get the selected production's name ---
   const selectedproductionName =
     selectedproductionIndex !== null
       ? productions[selectedproductionIndex]?.name
@@ -262,6 +240,17 @@ function OrderForm({ order, onCancel, onSave }) {
         </Field>
 
         <Field>
+          <FieldLabel htmlFor="orderNumber">Order NO</FieldLabel>
+          <Input
+            id="orderNumber"
+            type="text"
+            value={orderNumber}
+            onChange={(e) => setOrderNumber(e.target.value)}
+            required
+          />
+        </Field>
+
+        <Field>
           <FieldLabel>Status</FieldLabel>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger>
@@ -276,9 +265,10 @@ function OrderForm({ order, onCancel, onSave }) {
             </SelectContent>
           </Select>
         </Field>
+
         <div className="pt-2">
           <div className="flex items-center justify-between mb-2 gap-3">
-            <h3 className="text-base font-semibold min-w-fit">productions</h3>
+            <h3 className="text-base font-semibold min-w-fit">Productions</h3>
             <div className="w-full">
               <Select
                 onValueChange={(v) => {
@@ -304,7 +294,7 @@ function OrderForm({ order, onCancel, onSave }) {
             <Table>
               <TableHeader className="bg-muted">
                 <TableRow>
-                  <TableHead className="w-[35%]">production</TableHead>
+                  <TableHead className="w-[35%]">Production</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Subtotal</TableHead>
@@ -343,9 +333,8 @@ function OrderForm({ order, onCancel, onSave }) {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          // --- MODIFIED: Stop propagation ---
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevents row click
+                            e.stopPropagation();
                             removeproductionAt(idx);
                           }}
                           aria-label="Remove production"
@@ -362,10 +351,7 @@ function OrderForm({ order, onCancel, onSave }) {
                       colSpan={5}
                       className="text-center text-sm text-muted-foreground"
                     >
-                      {selectedproductionName
-                        ? "No materials listed for this production."
-                        : "Focus on a production's quantity box to see its materials."}
-                      .
+                      No productions added. Click "Add production" to start.
                     </TableCell>
                   </TableRow>
                 )}
@@ -373,10 +359,8 @@ function OrderForm({ order, onCancel, onSave }) {
             </Table>
           </div>
 
-          {/* --- MODIFIED: Materials Table --- */}
           <div className="pt-4">
             <h3 className="text-base font-semibold mb-2">
-              {/* --- MODIFIED: Dynamic heading --- */}
               Required Materials{" "}
               {selectedproductionName ? `for ${selectedproductionName}` : ""}
             </h3>
@@ -390,21 +374,18 @@ function OrderForm({ order, onCancel, onSave }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* --- MODIFIED: Check displayedMaterials length --- */}
                   {displayedMaterials.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={3}
                         className="text-center text-sm text-muted-foreground"
                       >
-                        {/* --- MODIFIED: Dynamic empty message --- */}
                         {selectedproductionName
                           ? "No materials listed for this production."
-                          : "Click a production in the table above to see its materials."}
+                          : "Click a production quantity field to see its materials."}
                       </TableCell>
                     </TableRow>
                   ) : (
-                    // --- MODIFIED: Map over displayedMaterials ---
                     displayedMaterials.map((material) => {
                       const materialCost =
                         (material.unitPrice || 0) * material.totalQuantity;
@@ -420,7 +401,6 @@ function OrderForm({ order, onCancel, onSave }) {
                     })
                   )}
                 </TableBody>
-                {/* --- MODIFIED: Check displayedMaterials length --- */}
                 {displayedMaterials.length > 0 && (
                   <TableFooter>
                     <TableRow>
@@ -431,8 +411,7 @@ function OrderForm({ order, onCancel, onSave }) {
                         Total Material Cost
                       </TableCell>
                       <TableCell className="font-semibold">
-                        {/* --- MODIFIED: Use totalMaterialCost --- */}₹{" "}
-                        {totalMaterialCost.toFixed(2)}
+                        ₹ {totalMaterialCost.toFixed(2)}
                       </TableCell>
                     </TableRow>
                   </TableFooter>
@@ -440,41 +419,27 @@ function OrderForm({ order, onCancel, onSave }) {
               </Table>
             </div>
           </div>
-          {/* --- END: Materials Table --- */}
         </div>
 
         <Field>
-          <FieldLabel htmlFor="computedTotalPrice">
-            Computed Total Price
-          </FieldLabel>
-          <Input
-            id="computedTotalPrice"
-            value={`₹ ${computedTotalPrice.toFixed(2)}`}
-            readOnly
-          />
+          <FieldLabel htmlFor="totalPrice">Total Price</FieldLabel>
+          <InputGroup>
+            <InputGroupAddon align="inline-start">
+              <InputGroupText>₹</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              id="totalPrice"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={totalPrice}
+              onChange={(e) => setTotalPrice(e.target.value)}
+              required
+            />
+          </InputGroup>
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="totalPrice">Total Price (editable)</FieldLabel>
-          <Input
-            id="totalPrice"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            value={totalPrice}
-            onChange={(e) => {
-              setTouchedTotalPrice(true);
-              setTotalPrice(e.target.value);
-            }}
-            required
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="totalCost">Total Cost (COGS)</FieldLabel>
-          <Input id="totalCost" value={`₹ ${totalCost.toFixed(2)}`} readOnly />
-        </Field>
         <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel

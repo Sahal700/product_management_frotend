@@ -51,6 +51,7 @@ function Orders() {
       id: 1,
       customer: { id: 1, name: "Sunrise Bakery" },
       deliveryDate: "2025-11-05",
+      orderNumber: "OD-001",
       productions: [
         { id: 1, name: "Chocolate Cake", quantity: 5, price: 1200 },
         { id: 2, name: "Shawarma", quantity: 50, price: 250 },
@@ -63,6 +64,7 @@ function Orders() {
       id: 2,
       customer: { id: 2, name: "City Snacks" },
       deliveryDate: "2025-11-08",
+      orderNumber: "OD-002",
       productions: [
         { id: 1, name: "Chocolate Cake", quantity: 10, price: 1200 },
       ],
@@ -74,6 +76,7 @@ function Orders() {
       id: 3,
       customer: { id: 3, name: "Green Valley Cafe" },
       deliveryDate: "2025-11-10",
+      orderNumber: "OD-003",
       productions: [{ id: 4, name: "Spring Roll", quantity: 100, price: 80 }],
       totalPrice: 8000,
       totalCost: 4500,
@@ -234,9 +237,10 @@ function Orders() {
             <TableRow>
               <TableHead>Customer</TableHead>
               <TableHead>Delivery Date</TableHead>
+              <TableHead>Order NO</TableHead>
               <TableHead>Productions</TableHead>
               <TableHead>Total Price</TableHead>
-              <TableHead>Total Cost</TableHead>
+              {/* <TableHead>Total Cost</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead></TableHead>
             </TableRow>
@@ -248,9 +252,10 @@ function Orders() {
                   {o.customer?.name || "N/A"}
                 </TableCell>
                 <TableCell>{o.deliveryDate}</TableCell>
+                <TableCell>{o.orderNumber}</TableCell>
                 <TableCell>{o.productions?.length || 0} items</TableCell>
                 <TableCell>₹ {o.totalPrice.toFixed(2)}</TableCell>
-                <TableCell>₹ {o.totalCost.toFixed(2)}</TableCell>
+                {/* <TableCell>₹ {o.totalCost.toFixed(2)}</TableCell> */}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

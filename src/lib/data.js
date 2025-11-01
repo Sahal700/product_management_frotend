@@ -13,6 +13,11 @@ export const SUPPLIERS = [
   { id: 2, name: "ABC Supermart" },
 ];
 
+export const ORDERS = [
+  { id: 1, orderNumber: "OD-001", totalPrice: "18500.00" },
+  { id: 2, orderNumber: "OD-002", totalPrice: "12000.00" },
+  { id: 1, orderNumber: "OD-003", totalPrice: "8000.00" },
+];
 // ====================================================================
 // II. PRODUCTION CATALOG
 // ====================================================================

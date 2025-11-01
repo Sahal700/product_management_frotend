@@ -44,7 +44,7 @@ const navItems = [
   { title: "Customers", url: "/customers", icon: UsersIcon },
   { title: "Sales", url: "/sales", icon: Currency },
   { title: "Purchase", url: "/purchase", icon: Store },
-  { title: "Payment", url: "/payment", icon: Banknote },
+  { title: "Payments", url: "/payments", icon: Banknote },
   // { title: "Finance", url: "/staff/finance", icon: Banknote },
   // { title: "Reports", url: "/staff/reports", icon: FileText },
   // { title: "Administration", url: "/staff/admin", icon: Shield },

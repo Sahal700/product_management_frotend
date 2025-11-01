@@ -4,11 +4,11 @@ import Login from "@/pages/login/Login";
 import Orders from "@/pages/orders/Orders";
 import Sales from "@/pages/sales/Sales";
 import Purchase from "@/pages/purchase/Purchase";
-import Payment from "@/pages/payment/Payment";
 import Productions from "@/pages/productions/Productions";
 import Meterails from "@/pages/meterails/Meterails";
 import { Routes, Route } from "react-router-dom";
 import Customers from "@/pages/customers/Customer";
+import Payments from "@/pages/payments/Payments";
 
 export default function AppRoutes() {
   return (
@@ -21,7 +21,7 @@ export default function AppRoutes() {
         <Route path="customers" element={<Customers />} />
         <Route path="sales" element={<Sales />} />
         <Route path="purchase" element={<Purchase />} />
-        <Route path="payment" element={<Payment />} />
+        <Route path="payments" element={<Payments />} />
         <Route path="productions" element={<Productions />} />
         <Route path="meterails" element={<Meterails />} />
       </Route>
