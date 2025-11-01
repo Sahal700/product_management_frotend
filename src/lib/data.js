@@ -8,6 +8,11 @@ export const CUSTOMERS = [
   { id: 4, name: "Tech Corp Event Catering" },
 ];
 
+export const SUPPLIERS = [
+  { id: 1, name: "KK Supermart" },
+  { id: 2, name: "ABC Supermart" },
+];
+
 // ====================================================================
 // II. PRODUCTION CATALOG
 // ====================================================================

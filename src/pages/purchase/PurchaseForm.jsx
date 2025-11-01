@@ -25,25 +25,31 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 
-import { MATERIALS_CATALOG } from "@/lib/data";
+import { MATERIALS_CATALOG, SUPPLIERS } from "@/lib/data";
 
-function ProductionForm({ production, onCancel, onSave }) {
-  const isEdit = !!production;
+function PurchaseForm({ purchase, onCancel, onSave }) {
+  const isEdit = !!purchase;
 
-  const [name, setName] = useState(production?.name || "");
-  const [unit, setUnit] = useState(production?.unit || "piece");
-  const [price, setPrice] = useState(String(production?.price ?? ""));
+  const [supplierId, setSupplierId] = useState(
+    String(purchase?.supplier?.id || "")
+  );
+  const [purchaseDate, setPurchaseDate] = useState(
+    purchase?.purchaseDate || ""
+  );
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    purchase?.invoiceNumber || ""
+  );
+  const [totalPrice, setTotalPrice] = useState(
+    String(purchase?.totalPrice ?? "")
+  );
   const [materials, setMaterials] = useState(
-    (production?.materials || []).map((m) => ({
-      materialId: m.materialId,
+    (purchase?.materials || []).map((m) => ({
+      id: m.id,
       name: m.name,
+      quantity: m.quantity,
       unit: m.unit,
       unitPrice: m.unitPrice,
-      consumption: String(m.consumption ?? 1),
     }))
-  );
-  const [totalCost, setTotalCost] = useState(
-    String(production?.totalCost ?? "")
   );
 
   const [addMaterialSelect, setAddMaterialSelect] = useState();
@@ -51,27 +57,27 @@ function ProductionForm({ production, onCancel, onSave }) {
   useEffect(() => {
     const subtotal = materials.reduce(
       (sum, m) =>
-        sum + Number(m.unitPrice || 0) * (parseFloat(m.consumption) || 0),
+        sum + Number(m.unitPrice || 0) * (parseFloat(m.quantity) || 0),
       0
     );
-    setTotalCost(subtotal.toFixed(2));
+    setTotalPrice(subtotal.toFixed(2));
   }, [materials]);
 
   const addMaterialById = (materialId) => {
     const found = MATERIALS_CATALOG.find((m) => m.id === materialId);
     if (!found) return;
-    if (materials.some((m) => m.materialId === found.id)) {
+    if (materials.some((m) => m.id === found.id)) {
       // duplicate guard
       return;
     }
     setMaterials((prev) => [
       ...prev,
       {
-        materialId: found.id,
+        id: found.id,
         name: found.name,
         unit: found.unit,
         unitPrice: found.unitPrice,
-        consumption: "1",
+        quantity: "1",
       },
     ]);
   };
@@ -84,40 +90,28 @@ function ProductionForm({ production, onCancel, onSave }) {
     setMaterials((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleMaterialSelect = (idx, materialIdStr) => {
-    const materialId = parseInt(materialIdStr);
-    const found = MATERIALS_CATALOG.find((m) => m.id === materialId);
-    if (!found) return;
-    if (materials.some((m, i) => i !== idx && m.materialId === found.id)) {
-      // duplicate guard
-      return;
-    }
-    updateMaterialAt(idx, () => ({
-      materialId: found.id,
-      name: found.name,
-      unit: found.unit,
-      unitPrice: found.unitPrice,
-      consumption: 1,
-    }));
+  const handleQuantityChange = (idx, value) => {
+    updateMaterialAt(idx, (m) => ({ ...m, quantity: value }));
   };
 
-  const handleConsumptionChange = (idx, value) => {
-    updateMaterialAt(idx, (m) => ({ ...m, consumption: value }));
+  const handleUnitPriceChange = (idx, value) => {
+    updateMaterialAt(idx, (m) => ({ ...m, unitPrice: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const selectedSupplier = SUPPLIERS.find((s) => s.id === Number(supplierId));
     const payload = {
-      name: name.trim(),
-      unit,
-      price: Number(price) || 0,
-      totalCost: Number(totalCost) || 0,
+      supplier: selectedSupplier || { id: Number(supplierId), name: "Unknown" },
+      purchaseDate: purchaseDate,
+      invoiceNumber: invoiceNumber.trim(),
+      totalPrice: Number(totalPrice) || 0,
       materials: materials.map((m) => ({
-        materialId: m.materialId,
+        id: m.id,
         name: m.name,
         unit: m.unit,
         unitPrice: Number(m.unitPrice) || 0,
-        consumption: Number(m.consumption) || 0,
+        quantity: Number(m.quantity) || 0,
       })),
     };
     onSave?.(payload);
@@ -127,49 +121,41 @@ function ProductionForm({ production, onCancel, onSave }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="name">Name</FieldLabel>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Chocolate Cake"
-            required
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel>Unit</FieldLabel>
-          <Select value={unit} onValueChange={setUnit}>
+          <FieldLabel>Supplier</FieldLabel>
+          <Select value={supplierId} onValueChange={setSupplierId} required>
             <SelectTrigger>
-              <SelectValue placeholder="Select unit" />
+              <SelectValue placeholder="Select supplier" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="piece">piece</SelectItem>
-              <SelectItem value="pack">pack</SelectItem>
-              <SelectItem value="kg">kg</SelectItem>
-              <SelectItem value="g">g</SelectItem>
+              {SUPPLIERS.map((s) => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="price">Price</FieldLabel>
-          <InputGroup>
-            <InputGroupAddon align="inline-start">
-              <InputGroupText>₹</InputGroupText>
-            </InputGroupAddon>
-            <InputGroupInput
-              id="price"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="e.g., 1200"
-              required
-            />
-          </InputGroup>
+          <FieldLabel htmlFor="purchaseDate">Purchase date</FieldLabel>
+          <Input
+            id="purchaseDate"
+            type="date"
+            value={purchaseDate}
+            onChange={(e) => setPurchaseDate(e.target.value)}
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="invoiceNumber">Invoice Number</FieldLabel>
+          <Input
+            id="invoiceNumber"
+            value={invoiceNumber}
+            onChange={(e) => setInvoiceNumber(e.target.value)}
+            placeholder="e.g., INV-001"
+            required
+          />
         </Field>
 
         <div className="pt-2">
@@ -192,7 +178,7 @@ function ProductionForm({ production, onCancel, onSave }) {
                     <SelectItem
                       key={opt.id}
                       value={opt.id.toString()}
-                      disabled={materials.some((m) => m.materialId === opt.id)}
+                      disabled={materials.some((m) => m.id === opt.id)}
                     >
                       {opt.name}
                     </SelectItem>
@@ -206,9 +192,9 @@ function ProductionForm({ production, onCancel, onSave }) {
             <Table>
               <TableHeader className="bg-muted">
                 <TableRow>
-                  <TableHead className="w-[40%]">Material</TableHead>
-                  <TableHead>Unit Cost</TableHead>
-                  <TableHead>Consumption</TableHead>
+                  <TableHead className="w-[30%]">Material</TableHead>
+                  <TableHead>Unit Price</TableHead>
+                  <TableHead>Quantity</TableHead>
                   <TableHead>Line Total</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -216,11 +202,27 @@ function ProductionForm({ production, onCancel, onSave }) {
               <TableBody>
                 {materials.map((m, idx) => {
                   const lineTotal =
-                    Number(m.unitPrice || 0) * (parseFloat(m.consumption) || 0);
+                    Number(m.unitPrice || 0) * (parseFloat(m.quantity) || 0);
                   return (
                     <TableRow key={idx}>
                       <TableCell>{m.name}</TableCell>
-                      <TableCell>₹ {m.unitPrice}</TableCell>
+                      <TableCell>
+                        <InputGroup>
+                          <InputGroupAddon align="inline-start">
+                            <InputGroupText>₹</InputGroupText>
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            step="0.01"
+                            value={m.unitPrice}
+                            onChange={(e) =>
+                              handleUnitPriceChange(idx, e.target.value)
+                            }
+                          />
+                        </InputGroup>
+                      </TableCell>
                       <TableCell>
                         <InputGroup>
                           <InputGroupInput
@@ -228,9 +230,9 @@ function ProductionForm({ production, onCancel, onSave }) {
                             inputMode="decimal"
                             min="0"
                             step="0.01"
-                            value={m.consumption}
+                            value={m.quantity}
                             onChange={(e) =>
-                              handleConsumptionChange(idx, e.target.value)
+                              handleQuantityChange(idx, e.target.value)
                             }
                           />
                           <InputGroupAddon align="inline-end">
@@ -269,20 +271,19 @@ function ProductionForm({ production, onCancel, onSave }) {
         </div>
 
         <Field>
-          <FieldLabel htmlFor="totalCost">Total Cost</FieldLabel>
+          <FieldLabel htmlFor="totalPrice">Total Price</FieldLabel>
           <InputGroup>
             <InputGroupAddon align="inline-start">
               <InputGroupText>₹</InputGroupText>
             </InputGroupAddon>
             <InputGroupInput
-              id="totalCost"
+              id="totalPrice"
               type="number"
               inputMode="decimal"
               min="0"
               step="0.01"
-              value={totalCost}
-              onChange={(e) => setTotalCost(e.target.value)}
-              readOnly
+              value={totalPrice}
+              onChange={(e) => setTotalPrice(e.target.value)}
               required
             />
           </InputGroup>
@@ -293,7 +294,7 @@ function ProductionForm({ production, onCancel, onSave }) {
             Cancel
           </Button>
           <Button type="submit">
-            {isEdit ? "Save Changes" : "Add Production"}
+            {isEdit ? "Save Changes" : "Add Purchase"}
           </Button>
         </div>
       </FieldGroup>
@@ -301,4 +302,4 @@ function ProductionForm({ production, onCancel, onSave }) {
   );
 }
 
-export default ProductionForm;
+export default PurchaseForm;
