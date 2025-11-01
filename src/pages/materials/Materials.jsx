@@ -72,6 +72,8 @@ function Materials() {
 
   const handleDelete = (id) => {
     setMaterials((prev) => prev.filter((m) => m.id !== id));
+    const index = MATERIALS_CATALOG.findIndex((m) => m.id === id);
+    if (index !== -1) MATERIALS_CATALOG.splice(index, 1);
   };
 
   const handleSave = (values) => {
@@ -79,9 +81,18 @@ function Materials() {
       setMaterials((prev) =>
         prev.map((m) => (m.id === selected.id ? { ...m, ...values } : m))
       );
+
+      const index = MATERIALS_CATALOG.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        MATERIALS_CATALOG[index] = {
+          ...MATERIALS_CATALOG[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (materials.at(-1)?.id || 0) + 1;
       setMaterials((prev) => [...prev, { id: nextId, stock: 0, ...values }]);
+      MATERIALS_CATALOG.push({ id: nextId, stock: 0, ...values });
     }
     setDialogOpen(false);
     setSelected(null);
@@ -139,9 +150,15 @@ function Materials() {
             {paged.map((m) => (
               <TableRow key={m.id}>
                 <TableCell className="font-medium">{m.name}</TableCell>
-                <TableCell>₹ {m.unitPrice}</TableCell>
+                <TableCell className="font-semibold">₹ {m.unitPrice}</TableCell>
                 <TableCell>{m.unit}</TableCell>
-                <TableCell>{m.stock}</TableCell>
+                <TableCell
+                  className={`font-semibold ${
+                    m.stock <= m.alertLevel ? "text-red-600" : "text-green-600"
+                  }`}
+                >
+                  {m.stock}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

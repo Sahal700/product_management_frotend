@@ -29,26 +29,12 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import SupplierForm from "./SupplierForm";
+import { SUPPLIERS } from "@/lib/data";
 
 function Suppliers() {
   const { isMobile, open } = useSidebar();
 
-  const [suppliers, setSuppliers] = useState([
-    {
-      id: 1,
-      name: "KK Supermart",
-      phone: "+91 98765 43210",
-      email: "info@kksupermart.com",
-      address: "Main Road, Kochi",
-    },
-    {
-      id: 2,
-      name: "ABC Supermart",
-      phone: "+91 87654 32109",
-      email: "contact@abcsupermart.com",
-      address: "Market Street, Calicut",
-    },
-  ]);
+  const [suppliers, setSuppliers] = useState(SUPPLIERS);
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -85,6 +71,8 @@ function Suppliers() {
 
   const handleDelete = (id) => {
     setSuppliers((prev) => prev.filter((s) => s.id !== id));
+    const index = SUPPLIERS.findIndex((m) => m.id === id);
+    if (index !== -1) SUPPLIERS.splice(index, 1);
   };
 
   const handleSave = (values) => {
@@ -92,9 +80,17 @@ function Suppliers() {
       setSuppliers((prev) =>
         prev.map((s) => (s.id === selected.id ? { ...s, ...values } : s))
       );
+      const index = SUPPLIERS.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        SUPPLIERS[index] = {
+          ...SUPPLIERS[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (suppliers.at(-1)?.id || 0) + 1;
       setSuppliers((prev) => [...prev, { id: nextId, ...values }]);
+      SUPPLIERS.push({ id: nextId, stock: 0, ...values });
     }
     setDialogOpen(false);
     setSelected(null);

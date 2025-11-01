@@ -29,26 +29,12 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import CustomerForm from "./CustomerForm";
+import { CUSTOMERS } from "@/lib/data";
 
 function Customers() {
   const { isMobile, open } = useSidebar();
 
-  const [customers, setCustomers] = useState([
-    {
-      id: 1,
-      name: "Sunrise Bakery",
-      phone: "+1 555-123-4567",
-      email: "contact@sunrise.example",
-      address: "12 Market St, Springfield",
-    },
-    {
-      id: 2,
-      name: "City Snacks",
-      phone: "+1 555-987-6543",
-      email: "hello@citysnacks.example",
-      address: "45 Elm Ave, Riverdale",
-    },
-  ]);
+  const [customers, setCustomers] = useState(CUSTOMERS);
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -85,6 +71,8 @@ function Customers() {
 
   const handleDelete = (id) => {
     setCustomers((prev) => prev.filter((c) => c.id !== id));
+    const index = CUSTOMERS.findIndex((m) => m.id === id);
+    if (index !== -1) CUSTOMERS.splice(index, 1);
   };
 
   const handleSave = (values) => {
@@ -92,9 +80,17 @@ function Customers() {
       setCustomers((prev) =>
         prev.map((c) => (c.id === selected.id ? { ...c, ...values } : c))
       );
+      const index = CUSTOMERS.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        CUSTOMERS[index] = {
+          ...CUSTOMERS[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (customers.at(-1)?.id || 0) + 1;
       setCustomers((prev) => [...prev, { id: nextId, ...values }]);
+      CUSTOMERS.push({ id: nextId, ...values });
     }
     setDialogOpen(false);
     setSelected(null);

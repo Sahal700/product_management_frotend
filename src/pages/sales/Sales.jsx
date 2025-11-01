@@ -24,57 +24,9 @@ import { ResponsiveDrawerDialog } from "@/components/custom/responsiveDrawerDial
 import { Ellipsis, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import SalesForm from "./SalesForm"; // Import the new form
+import { ORDERS, SALES } from "@/lib/data";
 
-// --- DUMMY DATA ---
-// This data would normally come from your app's state or API
-const DUMMY_ORDERS = [
-  {
-    id: 1,
-    customer: { id: 1, name: "Sunrise Bakery" },
-    deliveryDate: "2025-11-05",
-    orderNumber: "OD-001",
-    productions: [
-      {
-        id: 1,
-        name: "Chocolate Cake",
-        unit: "piece",
-        quantity: 5,
-        price: 1200,
-      },
-      { id: 2, name: "Shawarma", unit: "piece", quantity: 50, price: 250 },
-    ],
-    totalPrice: 18500,
-    status: "in-progress",
-  },
-  {
-    id: 2,
-    customer: { id: 2, name: "City Snacks" },
-    deliveryDate: "2025-11-08",
-    orderNumber: "OD-002",
-    productions: [
-      {
-        id: 1,
-        name: "Chocolate Cake",
-        unit: "piece",
-        quantity: 10,
-        price: 1200,
-      },
-    ],
-    totalPrice: 12000,
-    status: "request-material",
-  },
-  {
-    id: 3,
-    customer: { id: 3, name: "Green Valley Cafe" },
-    deliveryDate: "2025-11-10",
-    orderNumber: "OD-003",
-    productions: [
-      { id: 4, name: "Spring Roll", unit: "piece", quantity: 100, price: 80 },
-    ],
-    totalPrice: 8000,
-    status: "material-received",
-  },
-];
+// --- DUMMY DATA --
 
 const SALES_STATUS_CONFIG = {
   pending: { label: "Pending", color: "bg-yellow-500" },
@@ -83,89 +35,16 @@ const SALES_STATUS_CONFIG = {
   cancelled: { label: "Cancelled", color: "bg-red-500" },
 };
 
-// --- NEW DUMMY SALES DATA ---
-const DUMMY_SALES = [
-  {
-    id: 1,
-    order: DUMMY_ORDERS[0],
-    salesDate: "2025-11-05",
-    productions: DUMMY_ORDERS[0].productions,
-    totalAmount: 18500,
-    paidAmount: 18500,
-    dueAmount: 0,
-    status: "paid",
-  },
-  {
-    id: 2,
-    order: DUMMY_ORDERS[1],
-    salesDate: "2025-11-08",
-    productions: DUMMY_ORDERS[1].productions,
-    totalAmount: 12000,
-    paidAmount: 5000,
-    dueAmount: 7000,
-    status: "partially-paid",
-  },
-  {
-    id: 3,
-    order: DUMMY_ORDERS[2],
-    salesDate: "2025-11-10",
-    productions: DUMMY_ORDERS[2].productions,
-    totalAmount: 8000,
-    paidAmount: 0,
-    dueAmount: 8000,
-    status: "pending",
-  },
-  {
-    id: 4,
-    order: DUMMY_ORDERS[0], // Repeat customer
-    salesDate: "2025-11-12",
-    productions: DUMMY_ORDERS[0].productions,
-    totalAmount: 18500,
-    paidAmount: 18500,
-    dueAmount: 0,
-    status: "paid",
-  },
-  {
-    id: 5,
-    order: DUMMY_ORDERS[1],
-    salesDate: "2025-11-13",
-    productions: DUMMY_ORDERS[1].productions,
-    totalAmount: 12000,
-    paidAmount: 0,
-    dueAmount: 12000,
-    status: "cancelled",
-  },
-  {
-    id: 6,
-    order: DUMMY_ORDERS[2],
-    salesDate: "2025-11-14",
-    productions: DUMMY_ORDERS[2].productions,
-    totalAmount: 8000,
-    paidAmount: 2000,
-    dueAmount: 6000,
-    status: "partially-paid",
-  },
-  {
-    id: 7,
-    order: DUMMY_ORDERS[0],
-    salesDate: "2025-11-15",
-    productions: DUMMY_ORDERS[0].productions,
-    totalAmount: 18500,
-    paidAmount: 0,
-    dueAmount: 18500,
-    status: "pending",
-  },
-];
 // --- END DUMMY DATA ---
 
 function Sales() {
   const { isMobile, open } = useSidebar();
 
   // We will use DUMMY_ORDERS as the prop for the SalesForm
-  const [orders] = useState(DUMMY_ORDERS);
+  const [orders] = useState(ORDERS);
 
   // State for recorded sales, now initialized with dummy data
-  const [sales, setSales] = useState(DUMMY_SALES);
+  const [sales, setSales] = useState(SALES);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -196,6 +75,8 @@ function Sales() {
 
   const handleDelete = (id) => {
     setSales((prev) => prev.filter((s) => s.id !== id));
+    const index = SALES.findIndex((m) => m.id === id);
+    if (index !== -1) SALES.splice(index, 1);
   };
 
   const handleSave = (values) => {
@@ -203,9 +84,17 @@ function Sales() {
       setSales((prev) =>
         prev.map((s) => (s.id === selected.id ? { ...s, ...values } : s))
       );
+      const index = SALES.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        SALES[index] = {
+          ...SALES[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (sales.at(-1)?.id || 0) + 1;
       setSales((prev) => [...prev, { id: nextId, ...values }]);
+      SALES.push({ id: nextId, ...values });
     }
     setDialogOpen(false);
     setSelected(null);

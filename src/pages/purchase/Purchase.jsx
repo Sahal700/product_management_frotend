@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PurchaseForm from "./PurchaseForm";
+import { PURCHASES } from "@/lib/data";
 
 const PURCHASE_STATUS_CONFIG = {
   pending: { label: "Pending", color: "bg-yellow-500" },
@@ -41,79 +42,7 @@ const PURCHASE_STATUS_CONFIG = {
 function Purchase() {
   const { isMobile, open } = useSidebar();
 
-  const [purchases, setPurchases] = useState([
-    {
-      id: 1,
-      supplier: { id: 1, name: "KK Supermart" },
-      purchaseDate: "2025-01-01",
-      totalAmount: 1200,
-      paidAmount: 1200,
-      dueAmount: 0,
-      invoiceNumber: "INV-001",
-      status: "paid",
-      materials: [
-        {
-          id: 2,
-          name: "Flour (All-purpose)",
-          quantity: 100,
-          unit: "kg",
-          unitPrice: 10,
-        },
-        {
-          id: 3,
-          name: "Sugar (Granulated)",
-          quantity: 20,
-          unit: "pack",
-          unitPrice: 10,
-        },
-      ],
-    },
-    {
-      id: 2,
-      supplier: { id: 2, name: "ABC Supermart" },
-      purchaseDate: "2025-01-02",
-      totalAmount: 1200,
-      paidAmount: 500,
-      dueAmount: 700,
-      invoiceNumber: "INV-002",
-      status: "partially-paid",
-      materials: [
-        {
-          id: 2,
-          name: "Flour (All-purpose)",
-          quantity: 100,
-          unit: "kg",
-          unitPrice: 10,
-        },
-        {
-          id: 3,
-          name: "Sugar (Granulated)",
-          quantity: 20,
-          unit: "pack",
-          unitPrice: 10,
-        },
-      ],
-    },
-    {
-      id: 3,
-      supplier: { id: 1, name: "KK Supermart" },
-      purchaseDate: "2025-01-03",
-      totalAmount: 2500,
-      paidAmount: 0,
-      dueAmount: 2500,
-      invoiceNumber: "INV-003",
-      status: "pending",
-      materials: [
-        {
-          id: 4,
-          name: "Chicken (Breast)",
-          quantity: 50,
-          unit: "kg",
-          unitPrice: 50,
-        },
-      ],
-    },
-  ]);
+  const [purchases, setPurchases] = useState(PURCHASES);
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -154,6 +83,8 @@ function Purchase() {
 
   const handleDelete = (id) => {
     setPurchases((prev) => prev.filter((p) => p.id !== id));
+    const index = PURCHASES.findIndex((m) => m.id === id);
+    if (index !== -1) PURCHASES.splice(index, 1);
   };
 
   const handleSave = (values) => {
@@ -161,9 +92,17 @@ function Purchase() {
       setPurchases((prev) =>
         prev.map((p) => (p.id === selected.id ? { ...p, ...values } : p))
       );
+      const index = PURCHASES.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        PURCHASES[index] = {
+          ...PURCHASES[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (purchases.at(-1)?.id || 0) + 1;
       setPurchases((prev) => [...prev, { id: nextId, ...values }]);
+      PURCHASES.push({ id: nextId, stock: 0, ...values });
     }
     setDialogOpen(false);
     setSelected(null);

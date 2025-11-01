@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import OrderForm from "./OrderForm";
-import { MATERIALS_CATALOG, PRODUCTION_RECIPES } from "@/lib/data";
+import { MATERIALS_CATALOG, PRODUCTION_RECIPES, ORDERS } from "@/lib/data";
 
 const STATUS_CONFIG = {
   "request-material": { label: "Request Material", color: "bg-yellow-500" },
@@ -46,43 +46,7 @@ const STATUS_CONFIG = {
 function Orders() {
   const { isMobile, open } = useSidebar();
 
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      customer: { id: 1, name: "Sunrise Bakery" },
-      deliveryDate: "2025-11-05",
-      orderNumber: "OD-001",
-      productions: [
-        { id: 1, name: "Chocolate Cake", quantity: 5, price: 1200 },
-        { id: 2, name: "Shawarma", quantity: 50, price: 250 },
-      ],
-      totalPrice: 18500,
-      totalCost: 10250,
-      status: "in-progress",
-    },
-    {
-      id: 2,
-      customer: { id: 2, name: "City Snacks" },
-      deliveryDate: "2025-11-08",
-      orderNumber: "OD-002",
-      productions: [
-        { id: 1, name: "Chocolate Cake", quantity: 10, price: 1200 },
-      ],
-      totalPrice: 12000,
-      totalCost: 6500,
-      status: "request-material",
-    },
-    {
-      id: 3,
-      customer: { id: 3, name: "Green Valley Cafe" },
-      deliveryDate: "2025-11-10",
-      orderNumber: "OD-003",
-      productions: [{ id: 4, name: "Spring Roll", quantity: 100, price: 80 }],
-      totalPrice: 8000,
-      totalCost: 4500,
-      status: "material-received",
-    },
-  ]);
+  const [orders, setOrders] = useState(ORDERS);
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -174,6 +138,8 @@ function Orders() {
 
   const handleDelete = (id) => {
     setOrders((prev) => prev.filter((o) => o.id !== id));
+    const index = ORDERS.findIndex((m) => m.id === id);
+    if (index !== -1) ORDERS.splice(index, 1);
   };
 
   const handleStatusChange = (orderId, newStatus) => {
@@ -187,9 +153,17 @@ function Orders() {
       setOrders((prev) =>
         prev.map((o) => (o.id === selected.id ? { ...o, ...values } : o))
       );
+      const index = ORDERS.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        ORDERS[index] = {
+          ...ORDERS[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (orders.at(-1)?.id || 0) + 1;
       setOrders((prev) => [...prev, { id: nextId, ...values }]);
+      ORDERS.push({ id: nextId, ...values });
     }
     setDialogOpen(false);
     setSelected(null);
@@ -254,7 +228,9 @@ function Orders() {
                 <TableCell>{o.deliveryDate}</TableCell>
                 <TableCell>{o.orderNumber}</TableCell>
                 <TableCell>{o.productions?.length || 0} items</TableCell>
-                <TableCell>₹ {o.totalPrice.toFixed(2)}</TableCell>
+                <TableCell className="font-semibold">
+                  ₹ {o.totalPrice.toFixed(2)}
+                </TableCell>
                 {/* <TableCell>₹ {o.totalCost.toFixed(2)}</TableCell> */}
                 <TableCell>
                   <DropdownMenu>

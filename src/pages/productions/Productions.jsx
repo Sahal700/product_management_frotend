@@ -30,51 +30,13 @@ import {
 } from "lucide-react";
 import ProductionForm from "./ProductionForm";
 
+import { PRODUCTS } from "@/lib/data";
+
 function Productions() {
   const { isMobile, open } = useSidebar();
 
   // Dummy productions
-  const [productions, setProductions] = useState([
-    {
-      id: 1,
-      name: "Chocolate Cake",
-      unit: "piece",
-      price: 1200,
-      totalCost: 650,
-      materials: [
-        {
-          materialId: 1,
-          name: "Flour (All-purpose)",
-          unit: "kg",
-          unitPrice: 35,
-          consumption: 2,
-        },
-        {
-          materialId: 2,
-          name: "Sugar (Granulated)",
-          unit: "kg",
-          unitPrice: 40,
-          consumption: 1,
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Shawarma",
-      unit: "piece",
-      price: 250,
-      totalCost: 140,
-      materials: [
-        {
-          materialId: 4,
-          name: "Chicken (Breast)",
-          unit: "kg",
-          unitPrice: 700,
-          consumption: 0.15,
-        },
-      ],
-    },
-  ]);
+  const [productions, setProductions] = useState(PRODUCTS);
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -111,6 +73,11 @@ function Productions() {
 
   const handleDelete = (id) => {
     setProductions((prev) => prev.filter((p) => p.id !== id));
+    const index = PRODUCTS.findIndex((m) => m.id === id);
+    if (index !== -1) PRODUCTS.splice(index, 1);
+    if (PRODUCTION_RECIPES[id]) {
+      delete PRODUCTION_RECIPES[id];
+    }
   };
 
   const handleSave = (values) => {
@@ -118,9 +85,19 @@ function Productions() {
       setProductions((prev) =>
         prev.map((p) => (p.id === selected.id ? { ...p, ...values } : p))
       );
+      const index = PRODUCTS.findIndex((m) => m.id === selected.id);
+      if (index !== -1) {
+        PRODUCTS[index] = {
+          ...PRODUCTS[index],
+          ...values,
+        };
+      }
     } else {
       const nextId = (productions.at(-1)?.id || 0) + 1;
       setProductions((prev) => [...prev, { id: nextId, ...values }]);
+      PRODUCTS.push({ id: nextId, ...values });
+      // Initialize empty recipe entry
+      PRODUCTION_RECIPES[nextId] = [];
     }
     setDialogOpen(false);
     setSelected(null);
@@ -178,8 +155,10 @@ function Productions() {
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{p.unit}</TableCell>
-                <TableCell>₹ {p.price}</TableCell>
-                <TableCell>₹ {p.totalCost}</TableCell>
+                <TableCell className="font-semibold">₹ {p.price}</TableCell>
+                <TableCell className="text-orange-500 font-semibold">
+                  ₹ {p.totalCost}
+                </TableCell>
                 <TableCell>{p.materials?.length || 0}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

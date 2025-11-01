@@ -233,6 +233,7 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
                             <InputGroupText>₹</InputGroupText>
                           </InputGroupAddon>
                           <InputGroupInput
+                            className="min-w-20"
                             type="number"
                             inputMode="decimal"
                             min="0"
@@ -247,6 +248,7 @@ function PurchaseForm({ purchase, onCancel, onSave }) {
                       <TableCell>
                         <InputGroup>
                           <InputGroupInput
+                            className="min-w-20"
                             type="number"
                             inputMode="decimal"
                             min="0"

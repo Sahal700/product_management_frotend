@@ -15,6 +15,9 @@ function MaterialForm({ material, onCancel, onSave }) {
   const [name, setName] = useState(material?.name || "");
   const [unitPrice, setunitPrice] = useState(String(material?.unitPrice ?? ""));
   const [unit, setUnit] = useState(material?.unit || "kg");
+  const [alertLevel, setAlertLevel] = useState(
+    String(material?.alertLevel ?? "10")
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,6 +25,7 @@ function MaterialForm({ material, onCancel, onSave }) {
       name: name.trim(),
       unitPrice: Number(unitPrice) || 0,
       unit,
+      alertLevel: Number(alertLevel) || 0,
     };
     onSave?.(payload);
   };
@@ -67,8 +71,25 @@ function MaterialForm({ material, onCancel, onSave }) {
               <SelectItem value="pack">pack</SelectItem>
               <SelectItem value="piece">piece</SelectItem>
               <SelectItem value="ltr">ltr</SelectItem>
+              <SelectItem value="dozen">dozen</SelectItem>
+              <SelectItem value="bottle">bottle</SelectItem>
             </SelectContent>
           </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="alertLevel">Alert Level</FieldLabel>
+          <Input
+            id="alertLevel"
+            type="number"
+            inputMode="decimal"
+            value={alertLevel}
+            onChange={(e) => setAlertLevel(e.target.value)}
+            placeholder="e.g., 35"
+            min="0"
+            step="0.01"
+            required
+          />
         </Field>
 
         <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-4">

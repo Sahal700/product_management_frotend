@@ -26,19 +26,12 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 
-// Dummy data for customers and productions
-const CUSTOMERS = [
-  { id: 1, name: "Sunrise Bakery" },
-  { id: 2, name: "City Snacks" },
-  { id: 3, name: "Green Valley Cafe" },
-];
-
-const PRODUCTIONS_CATALOG = [
-  { id: 1, name: "Chocolate Cake", unit: "piece", price: 1200, cost: 650 },
-  { id: 2, name: "Shawarma", unit: "piece", price: 250, cost: 140 },
-  { id: 3, name: "Biryani", unit: "kg", price: 450, cost: 280 },
-  { id: 4, name: "Spring Roll", unit: "piece", price: 80, cost: 45 },
-];
+import {
+  CUSTOMERS,
+  PRODUCTS,
+  MATERIALS_CATALOG,
+  PRODUCTION_RECIPES,
+} from "@/lib/data";
 
 const STATUS_OPTIONS = [
   { value: "request-material", label: "Request Material" },
@@ -48,31 +41,6 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
-
-// Materials Data and Recipes
-const MATERIALS_CATALOG = [
-  { id: 1, name: "Flour (All-purpose)", unit: "kg", unitPrice: 35 },
-  { id: 2, name: "Sugar (Granulated)", unit: "kg", unitPrice: 40 },
-  { id: 3, name: "Yeast (Dry)", unit: "pack", unitPrice: 150 },
-  { id: 4, name: "Chicken (Breast)", unit: "kg", unitPrice: 700 },
-];
-
-const PRODUCTION_RECIPES = {
-  1: [
-    { materialId: 1, quantity: 0.5 },
-    { materialId: 2, quantity: 0.3 },
-  ],
-  2: [
-    { materialId: 1, quantity: 0.1 },
-    { materialId: 4, quantity: 0.15 },
-    { materialId: 3, quantity: 0.01 },
-  ],
-  3: [{ materialId: 4, quantity: 0.5 }],
-  4: [
-    { materialId: 1, quantity: 0.05 },
-    { materialId: 4, quantity: 0.03 },
-  ],
-};
 
 function OrderForm({ order, onCancel, onSave }) {
   const isEdit = !!order;
@@ -149,7 +117,7 @@ function OrderForm({ order, onCancel, onSave }) {
   }, [productions]);
 
   const addproductionRow = (productionId) => {
-    const found = PRODUCTIONS_CATALOG.find((p) => p.id === productionId);
+    const found = PRODUCTS.find((p) => p.id === productionId);
     if (!found) return;
     setproductions((prev) => [
       ...prev,
@@ -280,7 +248,7 @@ function OrderForm({ order, onCancel, onSave }) {
                   <SelectValue placeholder="Add production..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {PRODUCTIONS_CATALOG.map((p) => (
+                  {PRODUCTS.map((p) => (
                     <SelectItem key={p.id} value={p.id.toString()}>
                       {p.name} - ₹{p.price}/{p.unit}
                     </SelectItem>
@@ -312,6 +280,7 @@ function OrderForm({ order, onCancel, onSave }) {
                       <TableCell>
                         <InputGroup>
                           <InputGroupInput
+                            className="min-w-20"
                             type="number"
                             inputMode="decimal"
                             min="0"

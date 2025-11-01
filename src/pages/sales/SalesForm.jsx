@@ -26,13 +26,7 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 
-// Dummy data for productions catalog (can be imported from a shared file)
-const PRODUCTIONS_CATALOG = [
-  { id: 1, name: "Chocolate Cake", unit: "piece", price: 1200, cost: 650 },
-  { id: 2, name: "Shawarma", unit: "piece", price: 250, cost: 140 },
-  { id: 3, name: "Biryani", unit: "kg", price: 450, cost: 280 },
-  { id: 4, name: "Spring Roll", unit: "piece", price: 80, cost: 45 },
-];
+import { PRODUCTS } from "@/lib/data";
 
 const SALES_STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
@@ -108,7 +102,7 @@ function SalesForm({ sale, orders = [], onCancel, onSave }) {
 
   // Handlers for productions table (copied from OrderForm)
   const addProductionRow = (productionId) => {
-    const found = PRODUCTIONS_CATALOG.find((p) => p.id === productionId);
+    const found = PRODUCTS.find((p) => p.id === productionId);
     if (!found) return;
     setProductions((prev) => [
       ...prev,
@@ -206,7 +200,7 @@ function SalesForm({ sale, orders = [], onCancel, onSave }) {
                   <SelectValue placeholder="Add new production..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {PRODUCTIONS_CATALOG.map((p) => (
+                  {PRODUCTS.map((p) => (
                     <SelectItem key={p.id} value={p.id.toString()}>
                       {p.name} - ₹{p.price}/{p.unit}
                     </SelectItem>
@@ -238,6 +232,7 @@ function SalesForm({ sale, orders = [], onCancel, onSave }) {
                       <TableCell>
                         <InputGroup>
                           <InputGroupInput
+                            className="min-w-20"
                             type="number"
                             inputMode="decimal"
                             min="0"

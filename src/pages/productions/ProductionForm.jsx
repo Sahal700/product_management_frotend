@@ -224,6 +224,7 @@ function ProductionForm({ production, onCancel, onSave }) {
                       <TableCell>
                         <InputGroup>
                           <InputGroupInput
+                            className="min-w-20"
                             type="number"
                             inputMode="decimal"
                             min="0"

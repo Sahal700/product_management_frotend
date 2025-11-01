@@ -10,7 +10,7 @@ import { Routes, Route } from "react-router-dom";
 import Customers from "@/pages/customers/Customer";
 import Payments from "@/pages/payments/Payments";
 import Suppliers from "@/pages/suppliers/Suppliers";
-import SupplierPayments from "@/pages/supplier_payments/SupplierPayments";
+import SupplierPayments from "@/pages/supplier_payments/SupplierPayment";
 
 export default function AppRoutes() {
   return (
