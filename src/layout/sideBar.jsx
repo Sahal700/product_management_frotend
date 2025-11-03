@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Warehouse,
   Wallet,
+  Plane,
 } from "lucide-react";
 
 import {
@@ -31,6 +32,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -104,9 +106,26 @@ function SideBar() {
   const location = useLocation();
   return (
     <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center justify-center gap-3 px-4 py-4">
+          <div className="flex flex-col">
+            <span
+              className="font-bold text-2xl tracking-wide"
+              style={{ color: "#C9A961" }}
+            >
+              AIRLINES
+            </span>
+            <span
+              className="text-xs text-center tracking-widest"
+              style={{ color: "#C9A961" }}
+            >
+              CATERERS
+            </span>
+          </div>
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (

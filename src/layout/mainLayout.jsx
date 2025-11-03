@@ -6,7 +6,7 @@ function MainLayout() {
   return (
     <SidebarProvider>
       <SideBar />
-      <main>
+      <main className="w-full">
         <SidebarTrigger />
         <Outlet />
       </main>
