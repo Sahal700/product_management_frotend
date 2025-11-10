@@ -155,7 +155,7 @@ function Purchase() {
               <TableHead>Paid Amount</TableHead>
               <TableHead>Due Amount</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Materials</TableHead>
+              {/* <TableHead>Materials</TableHead> */}
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -193,7 +193,7 @@ function Purchase() {
                     {PURCHASE_STATUS_CONFIG[p.status]?.label || p.status}
                   </Badge>
                 </TableCell>
-                <TableCell>{p.materials?.length || 0} items</TableCell>
+                {/* <TableCell>{p.materials?.length || 0} items</TableCell> */}
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
