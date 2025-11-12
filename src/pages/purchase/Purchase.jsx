@@ -36,7 +36,6 @@ const PURCHASE_STATUS_CONFIG = {
   pending: { label: "Pending", color: "bg-yellow-500" },
   "partially-paid": { label: "Partially Paid", color: "bg-blue-500" },
   paid: { label: "Paid", color: "bg-green-500" },
-  cancelled: { label: "Cancelled", color: "bg-red-500" },
 };
 
 function Purchase() {

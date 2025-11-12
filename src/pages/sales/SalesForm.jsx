@@ -32,7 +32,6 @@ const SALES_STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
   { value: "partially-paid", label: "Partially Paid" },
   { value: "paid", label: "Paid" },
-  { value: "cancelled", label: "Cancelled" },
 ];
 
 function SalesForm({ sale, orders = [], onCancel, onSave }) {
